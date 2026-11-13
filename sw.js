@@ -1,12 +1,14 @@
 /* Service Worker: macht die App offline nutzbar.
  * WICHTIG: Bei jeder Änderung an der App VERSION erhöhen (und in app.js APP_VERSION),
  * sonst zeigt das iPhone weiter die alte Version aus dem Cache. */
-const VERSION = '1.0.0';
+const VERSION = '2.1.0';
 const CACHE = 'einkaufsliste-' + VERSION;
 const FILES = [
   './',
   './index.html',
   './style.css',
+  './zutaten.js',
+  './icons.js',
   './core.js',
   './app.js',
   './lib/jsQR.js',

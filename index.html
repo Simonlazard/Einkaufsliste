@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Einkaufsliste</title>
-  <meta name="theme-color" content="#2f855a">
+  <meta name="theme-color" content="#fffefb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,26 +16,31 @@
 </head>
 <body>
   <header class="topbar">
+    <button id="back-btn" class="back" type="button" hidden>‹ Einstellungen</button>
     <h1 id="view-title">Einkaufsliste</h1>
   </header>
 
   <main>
     <!-- ============ LISTE ============ -->
-    <section id="view-list" class="view active" data-title="Einkaufsliste">
+    <section id="view-list" class="view active" data-title="Einkaufszettel">
+      <p class="list-hello"><span id="list-hello">Noch nichts auf dem Zettel</span></p>
+
       <form id="manual-form" class="add-row" autocomplete="off">
-        <input id="manual-input" type="text" placeholder="Hinzufügen, z. B. 1 l Milch" enterkeyhint="done">
+        <input id="manual-input" type="text" placeholder="Zutat hinzufügen, z. B. 1 l Milch" enterkeyhint="done">
         <button type="submit" class="btn primary" aria-label="Hinzufügen">+</button>
       </form>
 
+      <div id="recipe-entries" class="chips recipe-chips"></div>
+
       <div id="list-empty" class="empty">
-        <p class="empty-icon">🛒</p>
-        <p>Die Liste ist leer.</p>
-        <p class="muted">Scanne ein Rezept oder füge oben etwas hinzu.</p>
+        <p class="empty-icon">🧺</p>
+        <p><b>Der Zettel ist noch leer.</b></p>
+        <p class="muted">Scanne eine Rezeptkarte oder schreib oben etwas auf.</p>
       </div>
 
       <ul id="list-open" class="items"></ul>
 
-      <h2 id="done-heading" class="section-h">Erledigt</h2>
+      <h2 id="done-heading" class="section-h">Schon im Korb</h2>
       <ul id="list-done" class="items done"></ul>
 
       <details id="pantry-block" class="pantry-block">
@@ -44,15 +49,13 @@
       </details>
 
       <div id="recipes-block">
-        <h2 class="section-h">Rezepte auf der Liste</h2>
-        <ul id="recipe-entries" class="entries"></ul>
-        <button id="clear-list" class="btn danger block" type="button">Liste leeren</button>
+        <button id="clear-list" class="btn danger block" type="button">Zettel leeren</button>
       </div>
     </section>
 
     <!-- ============ SCANNEN ============ -->
     <section id="view-scan" class="view" data-title="Rezept scannen">
-      <div class="scanner">
+      <div id="scanner" class="scanner">
         <video id="scan-video" playsinline muted></video>
         <div class="scan-frame" aria-hidden="true"></div>
       </div>
@@ -65,54 +68,41 @@
       <canvas id="scan-canvas" hidden></canvas>
     </section>
 
-    <!-- ============ REZEPT ERSTELLEN ============ -->
-    <section id="view-create" class="view" data-title="Rezept-QR erstellen">
-      <div class="card">
-        <label class="field">Rezeptname
-          <input id="rc-name" type="text" placeholder="z. B. Quiche Lorraine">
-        </label>
-        <label class="field">Portionen
-          <input id="rc-portions" type="number" min="1" max="99" inputmode="numeric" value="4">
-        </label>
-      </div>
-
-      <div class="card">
-        <label class="field">Rezepttext einfügen (eine Zutat pro Zeile)
-          <textarea id="rc-text" rows="6" placeholder="200 g Sahne - min. 30% Fett&#10;1/2 TL Salz&#10;…"></textarea>
-        </label>
-        <button id="rc-parse" class="btn block" type="button">Zutaten erkennen</button>
-      </div>
-
-      <h2 class="section-h">Zutaten <span class="muted small">(prüfen und ggf. korrigieren)</span></h2>
-      <div id="rc-rows" class="ing-rows"></div>
-      <datalist id="unit-list"></datalist>
-      <button id="rc-add-row" class="btn block" type="button">+ Zutat</button>
-
-      <div class="actions">
-        <button id="rc-make" class="btn primary block" type="button">QR-Code erzeugen</button>
-        <button id="rc-reset" class="btn subtle block" type="button">Formular leeren</button>
-      </div>
-
-      <div id="rc-output" class="card output" hidden>
-        <img id="rc-qr" alt="QR-Code des Rezepts">
-        <p id="rc-info" class="muted small center"></p>
-        <p class="muted small center">Tipp: Bild lange gedrückt halten, um es zu sichern.</p>
-        <button id="rc-share" class="btn block" type="button">Bild teilen / speichern</button>
-        <button id="rc-print" class="btn block" type="button">Rezeptkarte drucken</button>
-        <button id="rc-to-list" class="btn block" type="button">Direkt auf die Liste</button>
-      </div>
-    </section>
-
     <!-- ============ EINSTELLUNGEN ============ -->
     <section id="view-settings" class="view" data-title="Einstellungen">
       <div class="card">
+        <h2 class="card-h">Scannen</h2>
+        <label class="check-row">
+          <input id="set-quick" type="checkbox">
+          <span>Schnell-Modus<small>Gescannte Rezepte kommen sofort auf die Liste (1×), ohne Rückfrage. Nur wenn ein Rezept schon auf der Liste ist, fragt die App nach.</small></span>
+        </label>
+      </div>
+
+      <div class="card">
         <h2 class="card-h">Hab ich immer da</h2>
-        <p class="muted small">Diese Zutaten werden auf der Liste nach unten in einen eigenen Bereich sortiert.</p>
+        <p class="muted small">Diese Zutaten werden auf der Liste in einen eigenen Bereich sortiert.</p>
         <div id="pantry-chips" class="chips"></div>
         <form id="pantry-form" class="add-row" autocomplete="off">
           <input id="pantry-input" type="text" placeholder="z. B. Zucker">
           <button type="submit" class="btn primary" aria-label="Hinzufügen">+</button>
         </form>
+      </div>
+
+      <div class="card">
+        <h2 class="card-h">Zutaten-Wörterbuch</h2>
+        <p class="muted small"><span id="dict-count">0</span> Zutaten sind fest eingebaut. Sie stehen in den QR-Codes nur als Nummer und halten diese klein.</p>
+        <button id="ing-add" class="btn block" type="button">Neue Zutat hinzufügen</button>
+        <div id="custom-block" hidden>
+          <h3 class="sub-h">Eigene Zutaten (<span id="custom-count">0</span>)</h3>
+          <p class="muted small">Stehen in QR-Codes als Text und machen sie größer. Mit dem Export können sie später fest ins Wörterbuch übernommen werden.</p>
+          <ul id="custom-list" class="plain-list"></ul>
+          <button id="custom-export" class="btn block" type="button">Eigene Zutaten exportieren</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-h">QR-Codes</h2>
+        <button id="open-create" class="btn block" type="button">QR-Code erstellen ›</button>
       </div>
 
       <div class="card">
@@ -131,25 +121,72 @@
         <button id="reset-all" class="btn danger block" type="button">Alle Daten löschen</button>
       </div>
     </section>
+
+    <!-- ============ QR-CODE ERSTELLEN (Unterseite der Einstellungen) ============ -->
+    <section id="view-create" class="view" data-title="QR-Code erstellen">
+      <div class="card">
+        <label class="field">Rezeptname mit Mengenangabe
+          <input id="rc-name" type="text" placeholder="z. B. Dampfnudeln 8 Stück oder Quiche Lorraine">
+        </label>
+        <p class="muted small">Ohne Mengenangabe gilt das Rezept als „ein Stück“. Der Name steht im Code und erscheint auf der Einkaufsliste.</p>
+      </div>
+
+      <div class="card">
+        <label class="field">Zutaten einfügen (eine pro Zeile)
+          <textarea id="rc-text" rows="6" placeholder="200 g Sahne&#10;1/2 TL Salz&#10;…"></textarea>
+        </label>
+        <button id="rc-parse" class="btn block" type="button">Zutaten erkennen</button>
+      </div>
+
+      <h2 class="section-h">Zutaten <span class="muted small">(prüfen und ggf. korrigieren)</span></h2>
+      <div id="rc-rows" class="ing-rows"></div>
+      <datalist id="unit-list"></datalist>
+      <button id="rc-add-row" class="btn block" type="button">+ Zutat</button>
+
+      <div class="card opts">
+        <label class="field">Fehlerkorrektur
+          <select id="rc-ec">
+            <option value="L">L – kleinster Code</option>
+            <option value="M">M – ausgewogen</option>
+            <option value="Q">Q – sehr robust</option>
+          </select>
+        </label>
+        <label class="field">Modulgröße für den Laser (mm)
+          <input id="rc-mm" type="number" step="0.05" min="0.2" max="3" inputmode="decimal">
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="rc-make" class="btn primary block" type="button">QR-Code erzeugen</button>
+        <button id="rc-reset" class="btn subtle block" type="button">Formular leeren</button>
+      </div>
+
+      <div id="rc-output" class="card output" hidden>
+        <img id="rc-qr" alt="QR-Code des Rezepts (helle Module auf schwarzem Grund)">
+        <p id="rc-info" class="muted small center"></p>
+        <p id="rc-warn" class="warn" hidden></p>
+        <button id="rc-svg" class="btn block" type="button">SVG für den Laser speichern</button>
+        <button id="rc-testcard" class="btn block" type="button">Testkarte (6 Modulgrößen) als SVG</button>
+        <button id="rc-share" class="btn block" type="button">Vorschau-Bild teilen</button>
+        <button id="rc-to-list" class="btn block" type="button">Direkt auf die Liste</button>
+        <p class="muted small center">Die SVG enthält nur die hellen Module (die graviert werden). Der schwarze Grund bleibt die Karte.</p>
+      </div>
+    </section>
   </main>
 
   <!-- ============ TABS ============ -->
   <nav class="tabbar">
     <button class="tab active" data-view="view-list" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
-      <span>Liste</span>
+      <span class="ti" aria-hidden="true">🛒</span>
+      <span>Zettel</span>
     </button>
     <button class="tab" data-view="view-scan" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/></svg>
+      <span class="ti" aria-hidden="true">📷</span>
       <span>Scannen</span>
     </button>
-    <button class="tab" data-view="view-create" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>
-      <span>Erstellen</span>
-    </button>
     <button class="tab" data-view="view-settings" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-      <span>Mehr</span>
+      <span class="ti" aria-hidden="true">⚙️</span>
+      <span>Einstellungen</span>
     </button>
   </nav>
 
@@ -158,12 +195,14 @@
     <form method="dialog" class="dialog-body">
       <h2 id="add-title"></h2>
       <p id="add-dup" class="warn" hidden>Dieses Rezept ist schon auf der Liste. Trotzdem noch einmal hinzufügen?</p>
-      <div id="add-portions-row" class="stepper-row">
-        <span>Portionen</span>
-        <div class="stepper">
-          <button type="button" id="add-minus" class="btn round" aria-label="weniger">−</button>
-          <output id="add-portions">4</output>
-          <button type="button" id="add-plus" class="btn round" aria-label="mehr">+</button>
+      <div class="stepper-row">
+        <span>Menge</span>
+        <div id="add-factors" class="seg">
+          <button type="button" data-f="0.5">½×</button>
+          <button type="button" data-f="1">1×</button>
+          <button type="button" data-f="2">2×</button>
+          <button type="button" data-f="3">3×</button>
+          <button type="button" data-f="4">4×</button>
         </div>
       </div>
       <ul id="add-preview" class="preview"></ul>
@@ -189,14 +228,49 @@
     </form>
   </dialog>
 
-  <!-- Druckansicht (Rezeptkarte) -->
-  <div id="print-area" aria-hidden="true"></div>
+  <!-- ============ DIALOG: Neue Zutat ============ -->
+  <dialog id="ing-dialog">
+    <div class="dialog-body">
+      <h2>Neue Zutat hinzufügen</h2>
+      <label class="field">Name
+        <input id="ing-name" type="text" placeholder="z. B. Zwiebel" autocomplete="off">
+      </label>
+      <label class="field">Einheit auf der Einkaufsliste
+        <select id="ing-unit">
+          <option value="">Stück</option>
+          <option value="g">Gramm (g)</option>
+          <option value="ml">Milliliter (ml)</option>
+          <option value="TL">Löffel (EL/TL)</option>
+          <option value="Stange">Stange</option>
+          <option value="Bund">Bund</option>
+          <option value="Dose">Dose</option>
+          <option value="Pck">Packung</option>
+          <option value="Becher">Becher</option>
+          <option value="Zehe">Zehe</option>
+          <option value="Kopf">Kopf</option>
+          <option value="Prise">Prise</option>
+          <option value="Msp">Messerspitze</option>
+        </select>
+      </label>
+      <label class="field">Weitere Schreibweisen (mit Komma getrennt)
+        <input id="ing-alias" type="text" placeholder="z. B. rote Zwiebel, Gemüsezwiebel" autocomplete="off">
+      </label>
+      <label class="check-row"><input id="ing-liquid" type="checkbox"><span>Flüssigkeit<small>g und ml werden gleichgesetzt (1 g = 1 ml).</small></span></label>
+      <label class="check-row"><input id="ing-pantry" type="checkbox"><span>Hab ich immer da</span></label>
+      <div class="dialog-actions">
+        <button type="button" id="ing-cancel" class="btn subtle">Abbrechen</button>
+        <button type="button" id="ing-ok" class="btn primary">Hinzufügen</button>
+      </div>
+    </div>
+  </dialog>
 
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script src="lib/jsQR.js"></script>
   <script src="lib/qrcode.js"></script>
+  <script src="zutaten.js"></script>
   <script src="core.js"></script>
+  <script src="icons.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
