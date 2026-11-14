@@ -523,8 +523,61 @@
     }).sort((a, b) => a.name.localeCompare(b.name, 'de'));
   }
 
+  // ---------- Foto-Texterkennung: Rohtext aufräumen ----------
+  /** Eine Zeile, die nur aus Menge (und evtl. Einheit) besteht, z. B. "200 g" oder "1/2 TL". */
+  function isAmountOnly(line) {
+    const { value, rest } = parseAmount(line);
+    if (value === null) return false;
+    const r = rest.trim().replace(/\.$/, '');
+    return r === '' || !!UNIT_BY_ALIAS[r.toLowerCase()];
+  }
+
+  /**
+   * Bereinigt den Text der Texterkennung, sodass pro Zeile eine Zutat steht:
+   * entfernt Kästchen/Aufzählungszeichen (auch als Buchstaben fehlgelesene), korrigiert typische
+   * Verwechslungen (O↔0, ml↔m1), fügt "200 g" + "Sahne" aus zwei Zeilen zusammen und hängt
+   * umgebrochene Fortsetzungszeilen an. Überschriften wie "Zutaten" oder "Für den Teig:" entfallen.
+   */
+  function cleanOcrText(raw) {
+    const lines = String(raw || '').replace(/\r/g, '').split('\n')
+      .map((l) => l.replace(/[ \t]+/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+    const out = [];
+    let prevAmountOnly = false;
+    for (let line of lines) {
+      line = line
+        .replace(/[ıİ]/g, '1')                                   // türkisches ı wird oft statt 1 gelesen
+        // Kästchen vor der Menge, oft als 1–3 Buchstaben oder Klammern fehlgelesen ("OD 200 g", "U 30 g", "[] 4 Eier")
+        .replace(/^(?:[\[({][\s_.]*[\])}]?|[▢☐□■●•·*✓✔☑|©®]+|[A-Za-zÄÖÜ]{1,3})\s*(?=[\d¼½¾⅓⅔⅛])/, '')
+        .replace(/(?<=\d)[Oo](?=\d)/g, '0')
+        .replace(/(\d)\s*m[1Iil|](?![A-Za-zÄÖÜäöüß])/g, '$1 ml')
+        .replace(/(\d)\s+[I|](?=\s)/g, '$1 l')
+        .replace(/^[-–—]\s+/, '')
+        .trim();
+      if (!line) continue;
+      if (!/[A-Za-zÄÖÜäöüß0-9¼½¾⅓⅔⅛]{2}/.test(line) && !/[¼½¾⅓⅔⅛]/.test(line)) continue;       // nur Zeichen-Müll
+      if (/^zutaten:?$/i.test(line) || /:$/.test(line)) continue;                                   // Überschriften
+      if (/^für\b/i.test(line) && !/\d/.test(line)) continue;
+
+      if (prevAmountOnly && out.length) {                       // "200 g" + "Sahne"
+        out[out.length - 1] += ' ' + line;
+        prevAmountOnly = false;
+        continue;
+      }
+      const startsLower = /^[a-zäöüß]/.test(line) && !/^(etwas|evtl|ggf|n\.\s?b|nach|ein bisschen|ein wenig|eine?n?\b)/i.test(line);
+      if (startsLower && out.length) {                          // umgebrochene Fortsetzung
+        const asNote = /^(plus|zum|zur|zu|für|ca\.?|etwa)\b/i.test(line) && !/ [-–—] /.test(out[out.length - 1]);
+        out[out.length - 1] += (asNote ? ' - ' : ' ') + line;
+        continue;
+      }
+      out.push(line);
+      prevAmountOnly = isAmountOnly(line);
+    }
+    return out.join('\n');
+  }
+
   const Core = {
-    unitInfo, canonicalUnit, unitCode, parseAmount, parseLine, parseRecipeText,
+    unitInfo, canonicalUnit, unitCode, parseAmount, parseLine, parseRecipeText, cleanOcrText,
     normalizeKey, lookup, canonicalName, pantryKey, setCustom, dictionary,
     formatQuantity, formatIngredientAmount, niceNumber,
     encodeBinary, decodeBinary, decodeRecipe, decodeScan, aggregate,

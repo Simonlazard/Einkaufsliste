@@ -9,6 +9,8 @@ Web-App (PWA) fürs iPhone: Rezept-QR-Codes scannen, Zutaten landen auf der Eink
 | `style.css` | Aussehen (hell/dunkel) |
 | `zutaten.js` | **Festes Zutaten-Wörterbuch** (Position = Nummer im QR-Code, nur am Ende erweitern!) |
 | `icons.js` | Symbole (Emojis) pro Zutat, per Stichwort im Namen; ändert nichts am QR-Format |
+| `ocr.js` | Foto-Texterkennung: Kamera mit Rahmen, liest nur den Rahmen (Tesseract, Deutsch, offline) |
+| `lib/tesseract/` | Erkennungsdateien (ca. 9,6 MB). Werden beim ersten Foto auf dem iPhone zwischengespeichert |
 | `core.js` | Logik: Zeilen erkennen, Einheiten, Addieren, QR-Format |
 | `app.js` | Oberfläche, Scanner, QR-Erstellung, SVG-Export, Speicherung |
 | `sw.js` | Offline-Cache |

@@ -44,12 +44,15 @@
       <ul id="list-done" class="items done"></ul>
 
       <details id="pantry-block" class="pantry-block">
-        <summary>Hab ich immer da (<span id="pantry-count">0</span>)</summary>
+        <summary>
+          <span class="pb-title">Hab ich immer da (<span id="pantry-count">0</span>)</span>
+          <span class="pb-house" aria-hidden="true">🏠</span>
+        </summary>
         <ul id="list-pantry" class="items pantry"></ul>
       </details>
 
-      <div id="recipes-block">
-        <button id="clear-list" class="btn danger block" type="button">Zettel leeren</button>
+      <div id="recipes-block" class="clear-zone">
+        <button id="clear-list" class="clear-btn" type="button">Zettel leeren</button>
       </div>
     </section>
 
@@ -132,9 +135,11 @@
       </div>
 
       <div class="card">
-        <label class="field">Zutaten einfügen (eine pro Zeile)
-          <textarea id="rc-text" rows="6" placeholder="200 g Sahne&#10;1/2 TL Salz&#10;…"></textarea>
-        </label>
+        <div class="field-head">
+          <label class="field" for="rc-text">Zutaten einfügen (eine pro Zeile)</label>
+          <button id="rc-photo" class="btn photo-btn" type="button">📷 Foto</button>
+        </div>
+        <textarea id="rc-text" rows="6" placeholder="200 g Sahne&#10;1/2 TL Salz&#10;… oder mit „📷 Foto“ abfotografieren"></textarea>
         <button id="rc-parse" class="btn block" type="button">Zutaten erkennen</button>
       </div>
 
@@ -264,6 +269,19 @@
     </div>
   </dialog>
 
+  <!-- ============ Foto-Texterkennung (Kamera mit Rahmen) ============ -->
+  <div id="ocr-overlay" hidden>
+    <video id="ocr-video" playsinline muted></video>
+    <div id="ocr-frame"></div>
+    <p id="ocr-hint">Zutatenliste in den Rahmen legen</p>
+    <div class="ocr-bar">
+      <button id="ocr-cancel" class="ocr-cancel" type="button">Abbrechen</button>
+      <button id="ocr-shutter" class="ocr-shutter" type="button" aria-label="Foto aufnehmen" disabled></button>
+      <span class="ocr-spacer"></span>
+    </div>
+    <div id="ocr-busy" class="ocr-busy" hidden><div class="spinner"></div><p id="ocr-busy-text">Text wird gelesen …</p></div>
+  </div>
+
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script src="lib/jsQR.js"></script>
@@ -271,6 +289,8 @@
   <script src="zutaten.js"></script>
   <script src="core.js"></script>
   <script src="icons.js"></script>
+  <script src="lib/tesseract/tesseract.min.js"></script>
+  <script src="ocr.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

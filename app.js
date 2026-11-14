@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.1.0'; // bei jeder Änderung zusammen mit sw.js erhöhen
+  const APP_VERSION = '2.2.0'; // bei jeder Änderung zusammen mit sw.js erhöhen
   const STORAGE_KEY = 'einkaufsliste.v1';
   const EXTRA_PANTRY = ['Öl', 'Olivenöl', 'Essig', 'Paprikapulver', 'Oregano', 'Zimt'];
   const TEST_SIZES = [0.30, 0.35, 0.40, 0.45, 0.50, 0.60]; // mm pro Modul auf der Testkarte
@@ -566,6 +566,21 @@
 
   $('#rc-name').addEventListener('input', (ev) => { state.draft.name = ev.target.value; save(); });
   $('#rc-text').addEventListener('input', (ev) => { state.draft.text = ev.target.value; save(); });
+
+  // Foto → Text: erkannter Text wird aufgeräumt und unten angehängt
+  $('#rc-photo').addEventListener('click', async () => {
+    const raw = await Ocr.run();
+    if (raw === null) return;
+    const cleaned = Core.cleanOcrText(raw);
+    if (!cleaned) { toast('Es wurde kein Text erkannt. Bitte noch einmal versuchen.'); return; }
+    const ta = $('#rc-text');
+    ta.value = ta.value.replace(/\s+$/, '') + (ta.value.trim() ? '\n' : '') + cleaned;
+    state.draft.text = ta.value;
+    save();
+    const n = cleaned.split('\n').length;
+    toast(`${n} ${n === 1 ? 'Zeile' : 'Zeilen'} erkannt. Bitte prüfen.`);
+    ta.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  });
 
   $('#rc-parse').addEventListener('click', () => {
     const parsed = Core.parseRecipeText($('#rc-text').value);
